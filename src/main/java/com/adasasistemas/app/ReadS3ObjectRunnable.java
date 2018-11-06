@@ -1,7 +1,11 @@
 package com.adasasistemas.app;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -30,6 +34,7 @@ public class ReadS3ObjectRunnable implements Runnable {
 		return result;
 	}
 
+
 	public void run() {
 		try {
 			String url = s3.getUrl(App.BUCKET_NAME,object.getKey()).toString();
@@ -37,16 +42,35 @@ public class ReadS3ObjectRunnable implements Runnable {
 			Grib2RecordScanner scanner = new Grib2RecordScanner(httpFile);
 			while(scanner.hasNext()) {
 				Grib2Record record = scanner.next();
-							  
 				float[] data = record.readData(httpFile);
-				System.out.println("Data for " + object.getKey() + ": " + data[index]);
 				result.put("key", object.getKey());
 				result.put("data", data[index]);
-			
+				result.put("date", getDate(object.getKey()));
 				httpFile.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
 		}
+	}
+	
+	private Date getDate(String key) throws ParseException {
+		String[] chunks = key.split("/");
+		Date date = new Date();
+		if(chunks.length == 5) {
+			String stringDate  = chunks[2];
+			int hour = Integer.parseInt(chunks[3]) + Integer.parseInt(chunks[4]);
+			String stringHour = new String();
+			if(hour < 10) stringHour = "00" + String.valueOf(hour);
+			else if(hour < 100) stringHour = "0" + String.valueOf(hour);
+			else stringHour = String.valueOf(hour);
+			stringDate += stringHour;
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHH");
+			date = sdf.parse(stringDate);
+		}
+		return date;
 	}
 }

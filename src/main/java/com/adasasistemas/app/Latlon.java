@@ -14,9 +14,7 @@ public class Latlon {
 	
 	public int getIndex() {
 		double x = roundOff(latitude/RATIO);
-		//System.out.println("X " + x);
 		double y = Math.abs(roundOff((longitude-90)/RATIO));
-		//System.out.println("Y " + y);
 		return (int) (y*(360/RATIO) + x);
 	}
 	

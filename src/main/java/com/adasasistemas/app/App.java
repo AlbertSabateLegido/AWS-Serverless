@@ -1,5 +1,6 @@
 package com.adasasistemas.app;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,58 +85,4 @@ public class App
         }
 		return parameters;
 	}
-	
-	/* MAIN FUNCTION (Just for testing)*/
-    public static void main( String[] args )
-    {
-        String key = "TMPK/2 m HGHT/20181031/0000/";
-        
-        double latitude  = 101.9;
-        double longitude = 12.9;
-        
-        int index = new Latlon(latitude,longitude).getIndex();
-        
-        String header = "nThreads:16,lat:10,lon:11";
-        Map<String,Object> input = new HashMap<String,Object>();
-        for(String keyValue:header.split(",")) {
-        	String[] pair = keyValue.split(":");
-        	input.put(pair[0],pair[1]);
-        }
-        
-        System.out.println(input.toString());
-        
-        long initialTimer = System.currentTimeMillis();
-           
-        AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-        ListObjectsV2Result result = s3.listObjectsV2(BUCKET_NAME ,key);
-        
-        
-        List<S3ObjectSummary> objects = result.getObjectSummaries();
-        long timer1 = System.currentTimeMillis();
-        System.out.println("First call: " + (timer1 - initialTimer));
-        System.out.println("Get Files");
-        
-        ExecutorService executor = Executors.newFixedThreadPool(NTHREADS);
-        List<ReadS3ObjectRunnable> runnables = new ArrayList<ReadS3ObjectRunnable>();
-        for (S3ObjectSummary os: objects) {
-        	ReadS3ObjectRunnable task = new ReadS3ObjectRunnable(s3,os,index);
-        	runnables.add(task);
-	        executor.execute(task);
-        }
-        try {
-        	executor.shutdown();
-			executor.awaitTermination(1, TimeUnit.MINUTES);
-			System.out.println("TIME: " + (System.currentTimeMillis() - initialTimer));
-			JSONObject response = new JSONObject();
-			int i = 0;
-			for(ReadS3ObjectRunnable runnable:runnables) {
-				response.putOnce(String.valueOf(i), runnable.getResult());
-				++i;
-			}
-			System.out.println(response);
-			System.out.println("TIME: " + (System.currentTimeMillis() - initialTimer));
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-    }
 }
