@@ -1,6 +1,5 @@
 package com.adasasistemas.app;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +28,9 @@ public class App
 		}
 		
 		//ERROR CONTROL
-		if(parameters.size() != 3) {
+		if(parameters == null || parameters.isEmpty() || parameters.size() != 3) {
 			Map<String,Object> output = new HashMap<String,Object>();
-			output.put("statusCode", 502);
+			output.put("statusCode", 500);
 			output.put("body", "Parameters should be 'key:{my-key},latitude:{my-latitude},longitude:{my-longitude}'");
 			return output;
 		}
@@ -40,11 +39,15 @@ public class App
 		double lat = Double.parseDouble((String) parameters.get("latitude"));
 		double lon = Double.parseDouble((String) parameters.get("longitude"));
 		
-		String body = readS3Bucket(key,new Latlon(lat,lon).getIndex()).toString();
+		JSONObject body = new JSONObject();
+		body.put("key", key);
+		body.put("latitude", lat);
+		body.put("longitude", lon);
+		body.putOnce("variables",readS3Bucket(key,new Latlon(lat,lon).getIndex()));
 		
 		Map<String,Object> output = new HashMap<String,Object>();
 		output.put("statusCode", 200);
-		output.put("body", body);
+		output.put("body", body.toString());
 
 		return output;
 	}
@@ -76,6 +79,7 @@ public class App
 	
 	private Map<String,Object> getParameters(String httpRequest) {
 		Map<String,Object> parameters = new HashMap<String,Object>();
+		if(httpRequest == null || httpRequest.isEmpty()) return parameters;
         for(String mapEntry:httpRequest.split(",")) {
         	String[] pairKeyValue = mapEntry.split(":");
   

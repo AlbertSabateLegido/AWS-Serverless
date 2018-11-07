@@ -57,12 +57,13 @@ public class ReadS3ObjectRunnable implements Runnable {
 		}
 	}
 	
+	//key must follow the model "Parameter/Vertical Level/YYYYMMDD/HH00/FFF"
 	private Date getDate(String key) throws ParseException {
 		String[] chunks = key.split("/");
 		Date date = new Date();
 		if(chunks.length == 5) {
 			String stringDate  = chunks[2];
-			int hour = Integer.parseInt(chunks[3]) + Integer.parseInt(chunks[4]);
+			int hour = Integer.parseInt(chunks[3].substring(0, 2)) + Integer.parseInt(chunks[4]);
 			String stringHour = new String();
 			if(hour < 10) stringHour = "00" + String.valueOf(hour);
 			else if(hour < 100) stringHour = "0" + String.valueOf(hour);
