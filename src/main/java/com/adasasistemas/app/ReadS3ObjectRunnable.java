@@ -5,11 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import ucar.nc2.grib.grib2.Grib2Record;
 import ucar.nc2.grib.grib2.Grib2RecordScanner;
@@ -18,43 +14,48 @@ import ucar.unidata.io.http.HTTPRandomAccessFile;
 public class ReadS3ObjectRunnable implements Runnable {
 	
 	private AmazonS3 s3;
-	private S3ObjectSummary object;
+	private String key;
 	private int index;
 	
-	private JSONObject result;
+	private ResponseObject response;
 	
-	public ReadS3ObjectRunnable(AmazonS3 s3,S3ObjectSummary object,int index) {
+	public ReadS3ObjectRunnable(AmazonS3 s3,String key,int index) {
 		this.s3 = s3;
-		this.object = object;
+		this.key = key;
 		this.index = index;
-		result = new JSONObject();
+		response = new ResponseObject();
 	}
 	
-	public JSONObject getResult() {
-		return result;
+	public ResponseObject getResponse() {
+		return response;
 	}
 
 
 	public void run() {
 		try {
-			String url = s3.getUrl(App.BUCKET_NAME,object.getKey()).toString();
+			String url = s3.getUrl(GetData.BUCKET_NAME,key).toString();
 			HTTPRandomAccessFile httpFile = new HTTPRandomAccessFile(url);
 			Grib2RecordScanner scanner = new Grib2RecordScanner(httpFile);
 			while(scanner.hasNext()) {
 				Grib2Record record = scanner.next();
 				float[] data = record.readData(httpFile);
-				result.put("key", object.getKey());
-				result.put("data", data[index]);
-				result.put("date", getDate(object.getKey()));
+				response.setValue(data[index]);
+				Date date = getDate(key);
+				response.setDate(getDate(date));
+				response.setHour(getHour(date));
+				response.setTime(getTime(key));
 				httpFile.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (JSONException e) {
-			e.printStackTrace();
 		} catch (ParseException e) {
 			e.printStackTrace();
-		}
+		} 
+	}
+
+	private String getTime(String key) {
+		String[] chunks = key.split("/");
+		return chunks[chunks.length-1];
 	}
 	
 	//key must follow the model "Parameter/Vertical Level/YYYYMMDD/HH00/FFF"
@@ -73,5 +74,15 @@ public class ReadS3ObjectRunnable implements Runnable {
 			date = sdf.parse(stringDate);
 		}
 		return date;
+	}
+	
+	private String getDate(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		return sdf.format(date);
+	}
+	
+	private String getHour(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+		return sdf.format(date);
 	}
 }
