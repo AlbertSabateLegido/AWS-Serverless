@@ -17,20 +17,19 @@ public class ReadS3ObjectRunnable implements Runnable {
 	private String key;
 	private int index;
 	
-	private ResponseObject response;
+	private Value value;
 	
 	public ReadS3ObjectRunnable(AmazonS3 s3,String key,int index) {
 		this.s3 = s3;
 		this.key = key;
 		this.index = index;
-		response = new ResponseObject();
+		this.value = new Value();
 	}
 	
-	public ResponseObject getResponse() {
-		return response;
+	public Value getValue() {
+		return value;
 	}
-
-
+	
 	public void run() {
 		try {
 			String url = s3.getUrl(GetData.BUCKET_NAME,key).toString();
@@ -39,11 +38,11 @@ public class ReadS3ObjectRunnable implements Runnable {
 			while(scanner.hasNext()) {
 				Grib2Record record = scanner.next();
 				float[] data = record.readData(httpFile);
-				response.setValue(data[index]);
+				value.setValue(data[index]);
 				Date date = getDate(key);
-				response.setDate(getDate(date));
-				response.setHour(getHour(date));
-				response.setTime(getTime(key));
+				value.setDate(getDate(date));
+				value.setHour(getHour(date));
+				value.setTime(getTime(key));
 				httpFile.close();
 			}
 		} catch (IOException e) {
@@ -52,7 +51,7 @@ public class ReadS3ObjectRunnable implements Runnable {
 			e.printStackTrace();
 		} 
 	}
-
+	
 	private String getTime(String key) {
 		String[] chunks = key.split("/");
 		return chunks[chunks.length-1];

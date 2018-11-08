@@ -1,34 +1,42 @@
 package com.adasasistemas.app;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ResponseObject {
-	String time;
-	float value;
-	String date;
-	String hour;
+	String init;
+	String bucket;
+	Latlon location;
+	List<Value> values;
 	
-	public float getValue() {
-		return value;
+	public ResponseObject() {
+		values = new ArrayList<Value>();
 	}
-	public void setValue(float value) {
-		this.value = value;
+	
+	public String getInit() {
+		return init;
 	}
-	public String getDate() {
-		return date;
+	public void setInit(String init) {
+		this.init = init;
 	}
-	public void setDate(String date) {
-		this.date = date;
+	public String getBucket() {
+		return bucket;
 	}
-	public String getHour() {
-		return hour;
+	public void setBucket(String bucket) {
+		this.bucket = bucket;
 	}
-	public void setHour(String hour) {
-		this.hour = hour;
+	public Latlon getLocation() {
+		return location;
 	}
-	public String getTime() {
-		return time;
+	public void setLocation(Latlon location) {
+		this.location = location;
 	}
-	public void setTime(String time) {
-		this.time = time;
+	public List<Value> getValues() {
+		return values;
 	}
+	public void setValues(List<Value> values) {
+		this.values = values;
+	}
+	
 	
 }

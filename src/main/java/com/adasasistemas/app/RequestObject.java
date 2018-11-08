@@ -49,8 +49,4 @@ public class RequestObject {
 	public String generateKey() {
 		return parameter + '/' + vertical_level + '/' + date + '/' + hour + '/';
 	}
-	public int generateIndex() {
-		return new LatLon(latitude,longitude).generateIndex();
-	}
-	
 }
